@@ -31,13 +31,13 @@
     "location": {
       "type": "string",
       "allowedValues": [
-        "USGovVirginia"
+        "USGov Virginia"
       ]
     }
   },
   "resources": [
     {
-      "apiVersion": "2017-03-15-preview",
+      "apiVersion": "2015-11-01-preview",
       "type": "Microsoft.OperationalInsights/workspaces",
       "name": "[parameters('workspaceName')]",
       "location": "[parameters('location')]",
