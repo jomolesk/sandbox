@@ -31,10 +31,7 @@
     "location": {
       "type": "string",
       "allowedValues": [
-        "East US",
-        "West Europe",
-        "Southeast Asia",
-        "Australia Southeast"
+        "USGovVirginia"
       ]
     }
   },
