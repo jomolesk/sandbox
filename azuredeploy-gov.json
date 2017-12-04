@@ -45,8 +45,8 @@
         "sku": {
           "Name": "[parameters('serviceTier')]"
         },
-    "retention": "[parameters('dataRetention')]"
+        "retention": "[parameters('dataRetention')]"
       }
     }
-  ],
+  ]
 }
