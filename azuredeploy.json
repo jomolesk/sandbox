@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "workspaceName"
+      }
+    },
+    "serviceTier": {
+      "type": "string",
+      "allowedValues": [
+        "Free",
+        "Standalone",
+        "PerNode"
+      ],
+      "metadata": {
+        "description": "Service Tier: Free, Standalone, or PerNode"
+    }
+      },
+    "dataRetention": {
+      "type": "int",
+      "defaultValue": 365,
+      "minValue": 7,
+      "maxValue": 730,
+      "metadata": {
+        "description": "Number of days of retention. Free plans can only have 7 days, Standalone and OMS plans include 30 days for free"
+      }
+    },
+    "location": {
+      "type": "string",
+      "allowedValues": [
+        "East US"
+      ]
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-11-01-preview",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('workspaceName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "Name": "[parameters('serviceTier')]"
+        },
+    "retention": "[parameters('dataRetention')]"
+      }
+    }
+  ],
+}
