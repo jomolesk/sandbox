@@ -2,53 +2,32 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "virtualNetworkName": {
-      "type": "string",
-      "metadata": {
-        "description": "virtual network name"
-      }
-    },
-    "vnetAddressPrefix": {
+    "addressPrefix": {
       "type": "string",
       "defaultValue": "10.0.0.0/16",
       "metadata": {
-        "description": "virtual network address range"
-      }
-    },
-    "subnetName": {
-      "type": "string",
-      "defaultValue": "subnet1",
-      "metadata": {
-        "description": "Subnet Name"
+        "description": "Address prefix for the Virtual Network"
       }
     },
     "subnetPrefix": {
       "type": "string",
-      "defaultValue": "10.0.0.0/24",
+      "defaultValue": "10.0.0.0/28",
       "metadata": {
         "description": "Subnet prefix"
-      }
-    },
-    "applicationGatewayName": {
-      "type": "string",
-      "defaultValue": "applicationGateway1",
-      "metadata": {
-        "description": "application gateway name"
       }
     },
     "applicationGatewaySize": {
       "type": "string",
       "allowedValues": [
-        "Standard_Small",
-        "Standard_Medium",
-        "Standard_Large"
+        "WAF_Medium",
+        "WAF_Large"
       ],
-      "defaultValue": "Standard_Small",
+      "defaultValue": "WAF_Medium",
       "metadata": {
         "description": "application gateway size"
       }
     },
-    "applicationGatewayInstanceCount": {
+    "capacity": {
       "type": "int",
       "allowedValues": [
         1,
@@ -64,69 +43,96 @@
       ],
       "defaultValue": 2,
       "metadata": {
-        "description": "application gateway instance count"
+        "description": "Number of instances"
       }
     },
-    "frontendPort": {
-      "type": "int",
-      "defaultValue": 80,
+    "backendIpAddress1": {
+      "type": "string",
+      "defaultValue": "10.0.1.10",
       "metadata": {
-        "description": "application gateway front end port"
+        "description": "IP Address for Backend Server 1"
       }
     },
-    "backendPort": {
-      "type": "int",
-      "defaultValue": 80,
+    "backendIpAddress2": {
+      "type": "string",
+      "defaultValue": "10.0.1.11",
       "metadata": {
-        "description": "application gateway back end port"
+        "description": "IP Address for Backend Server 2"
       }
     },
-    "backendIPAddresses": {
-      "type": "array",
-      "defaultValue": [
-        {
-          "IpAddress": "10.0.0.4"
-        },
-        {
-          "IpAddress": "10.0.0.5"
-        }
-      ],
+    "wafEnabled": {
+      "type": "bool",
+      "defaultValue": true,
       "metadata": {
-        "description": "back end pool ip addresses"
+        "description": "WAF Enabled"
       }
     },
-    "cookieBasedAffinity": {
+    "wafMode": {
       "type": "string",
       "allowedValues": [
-        "Enabled",
-        "Disabled"
+        "Detection",
+        "Prevention"
       ],
-      "defaultValue": "Disabled",
+      "defaultValue": "Detection",
       "metadata": {
-        "description": "cookie based affinity"
+        "description": "WAF Mode"
+      }
+    },
+    "wafRuleSetType": {
+      "type": "string",
+      "allowedValues": [
+        "OWASP"
+      ],
+      "defaultValue": "OWASP",
+      "metadata": {
+        "description": "WAF Rule Set Type"
+      }
+    },
+    "wafRuleSetVersion": {
+      "type": "string",
+      "allowedValues": [
+        "2.2.9",
+        "3.0"
+      ],
+      "defaultValue": "3.0",
+      "metadata": {
+        "description": "WAF Rule Set Version"
       }
     }
   },
   "variables": {
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-    "apiVersion": "2015-06-15"
+    "applicationGatewayName": "applicationGateway1",
+    "publicIPAddressName": "publicIp1",
+    "virtualNetworkName": "virtualNetwork1",
+    "subnetName": "appGatewaySubnet",
+    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('virtualNetworkName'), variables('subnetName'))]",
+    "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+    "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways', variables('applicationGatewayName'))]"
   },
   "resources": [
     {
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2017-03-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2017-03-01",
       "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('virtualNetworkName')]",
+      "name": "[variables('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('vnetAddressPrefix')]"
+            "[parameters('addressPrefix')]"
           ]
         },
         "subnets": [
           {
-            "name": "[parameters('subnetName')]",
+            "name": "[variables('subnetName')]",
             "properties": {
               "addressPrefix": "[parameters('subnetPrefix')]"
             }
@@ -136,17 +142,18 @@
     },
     {
       "apiVersion": "2017-06-01",
-      "name": "[parameters('applicationGatewayName')]",
+      "name": "[variables('applicationGatewayName')]",
       "type": "Microsoft.Network/applicationGateways",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+        "[variables('virtualNetworkName')]",
+        "[variables('publicIPAddressName')]"
       ],
       "properties": {
         "sku": {
           "name": "[parameters('applicationGatewaySize')]",
-          "tier": "Standard",
-          "capacity": "[parameters('applicationGatewayInstanceCount')]"
+          "tier": "WAF",
+          "capacity": "[parameters('capacity')]"
         },
         "gatewayIPConfigurations": [
           {
@@ -162,8 +169,8 @@
           {
             "name": "appGatewayFrontendIP",
             "properties": {
-              "subnet": {
-                "id": "[variables('subnetRef')]"
+              "PublicIPAddress": {
+                "id": "[variables('publicIPRef')]"
               }
             }
           }
@@ -172,7 +179,7 @@
           {
             "name": "appGatewayFrontendPort",
             "properties": {
-              "Port": "[parameters('frontendPort')]"
+              "Port": 80
             }
           }
         ],
@@ -180,7 +187,14 @@
           {
             "name": "appGatewayBackendPool",
             "properties": {
-              "BackendAddresses": "[parameters('backendIPAddresses')]"
+              "BackendAddresses": [
+                {
+                  "IpAddress": "[parameters('backendIpAddress1')]"
+                },
+                {
+                  "IpAddress": "[parameters('backendIpAddress2')]"
+                }
+              ]
             }
           }
         ],
@@ -188,9 +202,9 @@
           {
             "name": "appGatewayBackendHttpSettings",
             "properties": {
-              "Port": "[parameters('backendPort')]",
+              "Port": 80,
               "Protocol": "Http",
-              "CookieBasedAffinity": "[parameters('cookieBasedAffinity')]"
+              "CookieBasedAffinity": "Disabled"
             }
           }
         ],
@@ -198,11 +212,11 @@
           {
             "name": "appGatewayHttpListener",
             "properties": {
-              "FrontendIpConfiguration": {
-                "Id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName')), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              "FrontendIPConfiguration": {
+                "Id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
               },
               "FrontendPort": {
-                "Id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName')), '/frontendPorts/appGatewayFrontendPort')]"
+                "Id": "[concat(variables('applicationGatewayID'), '/frontendPorts/appGatewayFrontendPort')]"
               },
               "Protocol": "Http",
               "SslCertificate": null
@@ -215,17 +229,24 @@
             "properties": {
               "RuleType": "Basic",
               "httpListener": {
-                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName')), '/httpListeners/appGatewayHttpListener')]"
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpListener')]"
               },
               "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName')), '/backendAddressPools/appGatewayBackendPool')]"
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/appGatewayBackendPool')]"
               },
               "backendHttpSettings": {
-                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName')), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
               }
             }
           }
-        ]
+        ],
+        "webApplicationFirewallConfiguration": {
+          "enabled": "[parameters('wafEnabled')]",
+          "firewallMode": "[parameters('wafMode')]",
+          "ruleSetType": "[parameters('wafRuleSetType')]",
+          "ruleSetVersion": "[parameters('wafRuleSetVersion')]",
+          "disabledRuleGroups": []
+        }
       }
     }
   ]
