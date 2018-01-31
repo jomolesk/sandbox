@@ -145,7 +145,7 @@
     "extensionVersion": "1.1",
     "encryptionOperation": "EnableEncryption",
     "keyEncryptionAlgorithm": "RSA-OAEP",
-    "encryptVmUrl": "[concat('https://raw.githubusercontent.com/jomolesk/azure-quickstart-templates/master/201-encrypt-running-windows-vm/azuredeploy-gov.json')]",
+    "encryptVmUrl": "[concat('https://raw.githubusercontent.com/jomolesk/sandbox/master/ade/nested/azuredeploy-gov.json')]",
     "keyVaultURL": "[concat('https://', parameters('keyVaultName'), '.vault.usgovcloudapi.net/')]",
     "keyVaultResourceID": "[concat(subscription().id,'/resourceGroups/',parameters('keyVaultResourceGroup'),'/providers/Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
   },
