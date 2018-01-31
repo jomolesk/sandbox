@@ -1,9 +1,9 @@
 # Enable encryption on a running Windows VM. 
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjomolesk%2Fsandbox%2Fade%2Fnested%2Fmaster%2F201-encrypt-running-windows-vm%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjomolesk%2Fsandbox%2Fmaster%2Fade%2Fnested%2F201-encrypt-running-windows-vm%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
-<a href="https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjomolesk%2Fsandbox%2Fade%2Fnested%2Fmaster%2F201-encrypt-running-windows-vm%2Fazuredeploy-gov.json" target="_blank">
+<a href="https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjomolesk%2Fsandbox%2Fmaster%2Fade%2Fnested%2F201-encrypt-running-windows-vm%2Fazuredeploy-gov.json" target="_blank">
     <img src="http://azuredeploy.net/AzureGov.png"/>
 </a>
 
